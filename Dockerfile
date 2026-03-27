@@ -1,45 +1,43 @@
-# ===========================
-# 1) Build stage
-# ===========================
-FROM php:8.2-fpm AS build
+# ===============================
+# Laravel Dockerfile for Render
+# ===============================
 
-# System dependencies
+FROM php:8.2-cli
+
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    unzip zip git libpng-dev libonig-dev libxml2-dev libzip-dev \
+    unzip \
+    zip \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
     && docker-php-ext-install pdo pdo_mysql mbstring gd zip bcmath
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-WORKDIR /app
+# Set working directory
+WORKDIR /var/www
 
 # Copy entire Laravel project
 COPY . .
 
-# Install dependencies (NO dev)
+# Install Laravel dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Generate optimized Laravel files
-RUN php artisan config:cache
-RUN php artisan route:cache
-RUN php artisan view:cache
+# Laravel optimization
+RUN php artisan config:cache || true
+RUN php artisan route:cache || true
+RUN php artisan view:cache || true
 
+# Storage permissions fix
+RUN chmod -R 775 storage bootstrap/cache
 
-# ===========================
-# 2) Final stage
-# ===========================
-FROM php:8.2-fpm
-
-RUN apt-get update && apt-get install -y \
-    unzip zip git libpng-dev libonig-dev libxml2-dev libzip-dev \
-    && docker-php-ext-install pdo pdo_mysql mbstring gd zip bcmath
-
-WORKDIR /app
-
-# Copy build assets
-COPY --from=build /app /app
-
+# Render requires port 8080
 EXPOSE 8080
 
-# Render requires listening on port 8080
-CMD php -S 0.0.0.0:8080 -t public
+# Run migrations + start server automatically
+CMD php artisan migrate --force && php -S 0.0.0.0:8080 -t public

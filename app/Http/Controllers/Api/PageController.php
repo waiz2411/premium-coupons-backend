@@ -10,6 +10,27 @@ use Illuminate\Http\Request;
 
 class PageController extends Controller
 {
+    public function index()
+    {
+        $pages = CustomPage::all()->map(function ($page) {
+            $pageData = $page->toArray();
+            $pageData['heroTitle'] = $pageData['hero_title'];
+            $pageData['heroDescription'] = $pageData['hero_description'];
+            $pageData['heroImage'] = $pageData['hero_image'];
+            $pageData['selectedCouponIds'] = $pageData['selected_coupon_ids'] ?? [];
+            $pageData['isSubpage'] = (bool)$pageData['is_subpage'];
+            $pageData['parentPageId'] = $pageData['parent_page_id'];
+            
+            unset(
+                $pageData['hero_title'], $pageData['hero_description'], $pageData['hero_image'],
+                $pageData['selected_coupon_ids'], $pageData['is_subpage'], $pageData['parent_page_id']
+            );
+            return $pageData;
+        });
+
+        return response()->json($pages);
+    }
+
     public function show($slug)
     {
         $page = CustomPage::with('subpages')->where('slug', $slug)->firstOrFail();

@@ -9,73 +9,96 @@ use Illuminate\Support\Str;
 
 class PageController extends Controller
 {
+    private function mapToCamelCase($page)
+    {
+        $data = $page->toArray();
+        $data['heroTitle']         = $data['hero_title'];
+        $data['heroDescription']   = $data['hero_description'];
+        $data['heroImage']         = $data['hero_image'];
+        $data['selectedCouponIds'] = $data['selected_coupon_ids'] ?? [];
+        $data['isSubpage']         = (bool)$data['is_subpage'];
+        $data['parentPageId']      = $data['parent_page_id'];
+
+        unset(
+            $data['hero_title'], $data['hero_description'], $data['hero_image'],
+            $data['selected_coupon_ids'], $data['is_subpage'], $data['parent_page_id']
+        );
+        return $data;
+    }
+
     public function index()
     {
-        return response()->json(CustomPage::all());
+        $pages = CustomPage::all()->map(function ($page) {
+            return $this->mapToCamelCase($page);
+        });
+        return response()->json($pages);
     }
 
     public function show($id)
     {
-        return response()->json(CustomPage::findOrFail($id));
+        $page = CustomPage::findOrFail($id);
+        return response()->json($this->mapToCamelCase($page));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string',
-            'slug' => 'required|string|unique:custom_pages,slug',
-            'heroTitle' => 'required|string',
-            'heroDescription' => 'nullable|string',
-            'heroImage' => 'nullable|string',
+            'name'              => 'required|string',
+            'slug'              => 'required|string|unique:custom_pages,slug',
+            'heroTitle'         => 'required|string',
+            'heroDescription'   => 'nullable|string',
+            'heroImage'         => 'nullable|string',
             'selectedCouponIds' => 'nullable|array',
-            'isSubpage' => 'boolean',
-            'parentPageId' => 'nullable|string',
+            'isSubpage'         => 'boolean',
+            'parentPageId'      => 'nullable|string',
         ]);
 
         $page = CustomPage::create([
-            'id' => (string) Str::uuid(),
-            'name' => $validated['name'],
-            'slug' => $validated['slug'],
-            'hero_title' => $validated['heroTitle'],
-            'hero_description' => $validated['heroDescription'] ?? null,
-            'hero_image' => $validated['heroImage'] ?? null,
+            'name'                => $validated['name'],
+            'slug'                => $validated['slug'],
+            'hero_title'          => $validated['heroTitle'],
+            'hero_description'    => $validated['heroDescription'] ?? null,
+            'hero_image'          => $validated['heroImage'] ?? null,
             'selected_coupon_ids' => $validated['selectedCouponIds'] ?? [],
-            'is_subpage' => $validated['isSubpage'] ?? false,
-            'parent_page_id' => $validated['parentPageId'] ?? null,
+            'is_subpage'          => $validated['isSubpage'] ?? false,
+            'parent_page_id'      => $validated['parentPageId'] ?? null,
         ]);
 
-        return response()->json($page, 201);
+        return response()->json($this->mapToCamelCase($page->fresh()), 201);
     }
 
     public function update(Request $request, $id)
     {
         $page = CustomPage::findOrFail($id);
         $validated = $request->validate([
-            'name' => 'sometimes|string',
-            'slug' => 'sometimes|string|unique:custom_pages,slug,' . $id,
-            'heroTitle' => 'sometimes|string',
-            'heroDescription' => 'nullable|string',
-            'heroImage' => 'nullable|string',
+            'name'              => 'sometimes|string',
+            'slug'              => 'sometimes|string|unique:custom_pages,slug,' . $id,
+            'heroTitle'         => 'sometimes|string',
+            'heroDescription'   => 'nullable|string',
+            'heroImage'         => 'nullable|string',
             'selectedCouponIds' => 'nullable|array',
-            'isSubpage' => 'boolean',
-            'parentPageId' => 'nullable|string',
+            'isSubpage'         => 'boolean',
+            'parentPageId'      => 'nullable|string',
         ]);
 
         $map = [
-            'heroTitle' => 'hero_title', 'heroDescription' => 'hero_description',
-            'heroImage' => 'hero_image', 'selectedCouponIds' => 'selected_coupon_ids',
-            'isSubpage' => 'is_subpage', 'parentPageId' => 'parent_page_id'
+            'heroTitle'         => 'hero_title',
+            'heroDescription'   => 'hero_description',
+            'heroImage'         => 'hero_image',
+            'selectedCouponIds' => 'selected_coupon_ids',
+            'isSubpage'         => 'is_subpage',
+            'parentPageId'      => 'parent_page_id',
         ];
-        
+
         $updateData = [];
-        foreach($validated as $key => $val) {
+        foreach ($validated as $key => $val) {
             $dbKey = $map[$key] ?? $key;
             if ($key === 'selectedCouponIds' && $val === null) $val = [];
             $updateData[$dbKey] = $val;
         }
 
         $page->update($updateData);
-        return response()->json($page);
+        return response()->json($this->mapToCamelCase($page->fresh()));
     }
 
     public function destroy($id)

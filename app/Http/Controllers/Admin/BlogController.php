@@ -5,60 +5,66 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\BlogPost;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class BlogController extends Controller
 {
+    private function mapPost($post): array
+    {
+        $data = is_array($post) ? $post : $post->toArray();
+        $data['readTime'] = $data['read_time'];
+        return $data;
+    }
+
     public function index(Request $request)
     {
         $query = BlogPost::query();
         if ($request->has('search')) {
             $query->where('title', 'like', '%' . $request->search . '%');
         }
-        return response()->json($query->get());
+        $posts = $query->get()->map(fn($p) => $this->mapPost($p));
+        return response()->json($posts);
     }
 
     public function show($id)
     {
-        return response()->json(BlogPost::findOrFail($id));
+        return response()->json($this->mapPost(BlogPost::findOrFail($id)));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title' => 'required|string',
-            'excerpt' => 'required|string',
-            'content' => 'required|string',
-            'image' => 'required|string',
-            'author' => 'required|string',
+            'title'    => 'required|string',
+            'excerpt'  => 'required|string',
+            'content'  => 'required|string',
+            'image'    => 'required|string',
+            'author'   => 'required|string',
             'category' => 'required|string',
             'readTime' => 'required|string',
         ]);
 
         $post = BlogPost::create([
-            'id' => (string) Str::uuid(),
-            'title' => $validated['title'],
-            'excerpt' => $validated['excerpt'],
-            'content' => $validated['content'],
-            'image' => $validated['image'],
-            'author' => $validated['author'],
-            'date' => now()->toDateString(),
-            'category' => $validated['category'],
+            'title'     => $validated['title'],
+            'excerpt'   => $validated['excerpt'],
+            'content'   => $validated['content'],
+            'image'     => $validated['image'],
+            'author'    => $validated['author'],
+            'date'      => now()->toDateString(),
+            'category'  => $validated['category'],
             'read_time' => $validated['readTime'],
         ]);
 
-        return response()->json($post, 201);
+        return response()->json($this->mapPost($post->fresh()), 201);
     }
 
     public function update(Request $request, $id)
     {
         $post = BlogPost::findOrFail($id);
         $validated = $request->validate([
-            'title' => 'sometimes|string',
-            'excerpt' => 'sometimes|string',
-            'content' => 'sometimes|string',
-            'image' => 'sometimes|string',
-            'author' => 'sometimes|string',
+            'title'    => 'sometimes|string',
+            'excerpt'  => 'sometimes|string',
+            'content'  => 'sometimes|string',
+            'image'    => 'sometimes|string',
+            'author'   => 'sometimes|string',
             'category' => 'sometimes|string',
             'readTime' => 'sometimes|string',
         ]);
@@ -69,7 +75,7 @@ class BlogController extends Controller
         }
 
         $post->update($validated);
-        return response()->json($post);
+        return response()->json($this->mapPost($post->fresh()));
     }
 
     public function destroy($id)

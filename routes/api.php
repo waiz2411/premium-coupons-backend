@@ -45,6 +45,7 @@ Route::post('/products/{id}/click', [ApiProductController::class, 'click']);
 Route::get('/blog', [ApiBlogController::class, 'index']);
 Route::get('/blog/{id}', [ApiBlogController::class, 'show']);
 
+Route::get('/pages', [ApiPageController::class, 'index']);
 Route::get('/pages/{slug}', [ApiPageController::class, 'show']);
 
 Route::get('/countries', [ApiCountryController::class, 'index']);
@@ -58,7 +59,8 @@ Route::get('/search', [ApiSearchController::class, 'index']);
 // Event Endpoints
 Route::post('/events/page-view', [ApiEventController::class, 'pageView']);
 Route::post('/events/store-click', [ApiEventController::class, 'storeClick']);
-Route::post('/events/coupon-click', [ApiCouponController::class, 'click']); // From doc: /api/events/coupon-click? Oh, wait, the doc says /api/events/coupon-click and /api/events/product-click but earlier it had /api/coupons/:id/click. Let's register both just in case, but map to Event controller or ignore depending on what I want exactly. Let's just create generic endpoints block.
+Route::post('/events/coupon-click', [ApiCouponController::class, 'click']);
+Route::post('/events/product-click', [ApiProductController::class, 'click']);
 Route::post('/events/newsletter-subscribe', [ApiEventController::class, 'newsletterSubscribe']);
 Route::post('/events/search', [ApiEventController::class, 'search']);
 
@@ -66,35 +68,35 @@ Route::post('/events/search', [ApiEventController::class, 'search']);
 Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
-    
+
     Route::apiResource('categories', AdminCategoryController::class);
     Route::apiResource('stores', AdminStoreController::class);
-    
+
+    // IMPORTANT: bulk route must come BEFORE apiResource to avoid being captured as a coupon ID
     Route::patch('/coupons/bulk-update-expiry', [AdminCouponController::class, 'bulkUpdateExpiry']);
     Route::apiResource('coupons', AdminCouponController::class);
-    
+
     Route::apiResource('products', AdminProductController::class);
-    
+
     Route::apiResource('blog', AdminBlogController::class);
-    
+
     Route::apiResource('pages', AdminPageController::class);
-    
+
     Route::patch('/countries/bulk-update', [AdminCountryController::class, 'bulkUpdate']);
     Route::get('/countries', [AdminCountryController::class, 'index']);
     Route::put('/countries/{code}', [AdminCountryController::class, 'update']);
-    
+
     Route::get('/seo', [AdminSeoController::class, 'index']);
     Route::put('/seo', [AdminSeoController::class, 'update']);
-    
+
     Route::get('/dashboard', [AdminDashboardController::class, 'index']);
-    
+
     Route::prefix('analytics')->group(function () {
         Route::get('/overview', [AdminAnalyticsController::class, 'overview']);
         Route::get('/stores', [AdminAnalyticsController::class, 'stores']);
         Route::get('/coupons', [AdminAnalyticsController::class, 'coupons']);
         Route::get('/products', [AdminAnalyticsController::class, 'products']);
     });
-    
+
     Route::post('/upload', [\App\Http\Controllers\Admin\FileUploadController::class, 'store']);
 });
-

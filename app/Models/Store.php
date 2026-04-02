@@ -18,6 +18,7 @@ class Store extends Model
         'countries' => 'array',
         'is_featured' => 'boolean',
         'rating' => 'float',
+        'about' => 'array',
     ];
 
     public function category()

@@ -13,10 +13,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::create([
+        User::updateOrCreate(
+        ['email' => 'admin@savesnapper.com'],
+        [
             'name' => 'Admin User',
-            'email' => 'admin@dealvault.com',
-            'password' => Hash::make('password'),
-        ]);
+            'password' => Hash::make('*fJMSQw=K7f'),
+        ]
+        );
+        // 👉 Call CountrySeeder
+        $this->call(CountrySeeder::class);
     }
 }

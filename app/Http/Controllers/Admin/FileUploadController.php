@@ -10,14 +10,17 @@ class FileUploadController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|max:5120', // 5MB limit
+            'file' => 'required|file|mimes:jpeg,jpg,png,gif,webp|max:5120', // 5MB limit
         ]);
 
         if ($request->hasFile('file')) {
-            $path = $request->file('file')->store('uploads', 'public');
+            $file = $request->file('file');
+            $path = $file->store('uploads', 'public');
+            // asset('storage/' . $path) generates the correct public URL after storage:link
+            $url = asset('storage/' . $path);
             return response()->json([
-                'url' => asset('storage/' . $path),
-                'path' => $path
+                'url'  => $url,
+                'path' => $path,
             ], 201);
         }
 

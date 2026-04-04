@@ -56,6 +56,7 @@ class StoreController extends Controller
 
         $items = $paginator->getCollection()->map(function ($store) {
             $data = $store->toArray();
+            $data['slug']         = $store->slug ?? null;
             $data['couponCount']  = $store->coupons_count ?? 0;
             $data['categoryId']   = $data['category_id'];
             $data['isFeatured']   = (bool)$data['is_featured'];
@@ -77,7 +78,11 @@ class StoreController extends Controller
         $request->validate(['country' => 'required|string']);
         $country = strtolower($request->query('country'));
 
-        $store = Store::whereJsonContains('countries', $country)->findOrFail($id);
+        $store = Store::whereJsonContains('countries', $country)
+            ->where(function($q) use ($id) {
+                $q->where('id', $id)->orWhere('slug', $id);
+            })
+            ->firstOrFail();
 
         $coupons = Coupon::where('store_id', $store->id)
             ->whereJsonContains('countries', $country)
@@ -116,6 +121,7 @@ class StoreController extends Controller
             ->get()
             ->map(function ($s) {
                 $item = $s->toArray();
+                $item['slug']         = $s->slug ?? null;
                 $item['categoryId']   = $item['category_id'];
                 $item['isFeatured']   = (bool)$item['is_featured'];
                 $item['affiliateLink'] = $item['affiliate_link'];
@@ -123,6 +129,7 @@ class StoreController extends Controller
             });
 
         $data = $store->toArray();
+        $data['slug']          = $store->slug ?? null;
         $data['categoryId']    = $data['category_id'];
         $data['isFeatured']    = (bool)$data['is_featured'];
         $data['affiliateLink'] = $data['affiliate_link'];

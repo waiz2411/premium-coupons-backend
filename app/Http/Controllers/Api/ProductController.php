@@ -41,6 +41,8 @@ class ProductController extends Controller
             $item['affiliateUrl'] = $item['affiliate_url'];
             $item['imageUrl'] = $item['image_url'];
             $item['isTrending'] = $item['is_trending'];
+            $item['originalPrice'] = $item['original_price'];
+            $item['discountedPrice'] = $item['discounted_price'];
             return $item;
         });
 
@@ -75,6 +77,8 @@ class ProductController extends Controller
         $item['affiliateUrl'] = $item['affiliate_url'];
         $item['imageUrl'] = $item['image_url'];
         $item['isTrending'] = $item['is_trending'];
+        $item['originalPrice'] = $item['original_price'];
+        $item['discountedPrice'] = $item['discounted_price'];
             
         return response()->json([
             'product' => $item,

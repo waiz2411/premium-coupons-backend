@@ -16,7 +16,8 @@ class ProductController extends Controller
         $data['affiliateUrl'] = $data['affiliate_url'];
         $data['imageUrl']     = $data['image_url'];
         $data['isTrending']   = (bool)$data['is_trending'];
-        $data['price']        = $data['price'] ?? null;
+        $data['originalPrice'] = $data['original_price'];
+        $data['discountedPrice'] = $data['discounted_price'];
         return $data;
     }
 
@@ -39,27 +40,18 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'title'        => 'required|string',
-            'storeId'      => 'required|string',
-            'categoryId'   => 'required|string',
+            'store_id'     => 'required|string',
+            'category_id'  => 'required|string',
             'description'  => 'required|string',
-            'affiliateUrl' => 'required|string',
-            'imageUrl'     => 'nullable|string',
-            'isTrending'   => 'required|boolean',
+            'affiliate_url'=> 'required|string',
+            'image_url'    => 'nullable|string',
+            'is_trending'  => 'required|boolean',
             'countries'    => 'required|array',
-            'price'        => 'nullable|string',
+            'original_price' => 'nullable|string',
+            'discounted_price' => 'nullable|string',
         ]);
 
-        $product = Product::create([
-            'title'         => $validated['title'],
-            'store_id'      => $validated['storeId'],
-            'category_id'   => $validated['categoryId'],
-            'description'   => $validated['description'],
-            'affiliate_url' => $validated['affiliateUrl'],
-            'image_url'     => $validated['imageUrl'] ?? null,
-            'is_trending'   => $validated['isTrending'] ?? $validated['is_trending'] ?? false,
-            'countries'     => $validated['countries'],
-            'price'         => $validated['price'] ?? null,
-        ]);
+        $product = Product::create($validated);
 
         return response()->json($this->mapProduct($product->fresh()), 201);
     }
@@ -69,31 +61,18 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
         $validated = $request->validate([
             'title'        => 'sometimes|string',
-            'storeId'      => 'sometimes|string',
-            'categoryId'   => 'sometimes|string',
+            'store_id'     => 'sometimes|string',
+            'category_id'  => 'sometimes|string',
             'description'  => 'sometimes|string',
-            'affiliateUrl' => 'sometimes|string',
-            'imageUrl'     => 'nullable|string',
-            'isTrending'   => 'sometimes|boolean',
+            'affiliate_url'=> 'sometimes|string',
+            'image_url'    => 'nullable|string',
+            'is_trending'  => 'sometimes|boolean',
             'countries'    => 'sometimes|array',
-            'price'        => 'nullable|string',
+            'original_price' => 'nullable|string',
+            'discounted_price' => 'nullable|string',
         ]);
 
-        $map = [
-            'storeId'      => 'store_id',
-            'categoryId'   => 'category_id',
-            'affiliateUrl' => 'affiliate_url',
-            'imageUrl'     => 'image_url',
-            'isTrending'   => 'is_trending',
-        ];
-
-        $updateData = [];
-        foreach ($validated as $key => $val) {
-            $dbKey = $map[$key] ?? $key;
-            $updateData[$dbKey] = $val;
-        }
-
-        $product->update($updateData);
+        $product->update($validated);
         return response()->json($this->mapProduct($product->fresh()));
     }
 

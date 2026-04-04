@@ -11,6 +11,7 @@ class StoreController extends Controller
     private function mapStore($store): array
     {
         $data = is_array($store) ? $store : $store->toArray();
+        $data['slug']          = $data['slug'] ?? null;
         $data['categoryId']    = $data['category_id'];
         $data['isFeatured']    = (bool)$data['is_featured'];
         $data['affiliateLink'] = $data['affiliate_link'];
@@ -36,6 +37,7 @@ class StoreController extends Controller
     {
         $validated = $request->validate([
             'name'          => 'required|string',
+            'slug'          => 'nullable|string',
             'logo'          => 'required|string',
             'description'   => 'required|string',
             'about'         => 'nullable|array',
@@ -48,6 +50,7 @@ class StoreController extends Controller
 
         $store = Store::create([
             'name'           => $validated['name'],
+            'slug'           => $validated['slug'] ?? \Illuminate\Support\Str::slug($validated['name'] . '-promo-code'),
             'logo'           => $validated['logo'],
             'description'    => $validated['description'],
             'about'          => $validated['about'] ?? null,
@@ -66,6 +69,7 @@ class StoreController extends Controller
         $store = Store::findOrFail($id);
         $validated = $request->validate([
             'name'          => 'sometimes|string',
+            'slug'          => 'sometimes|string',
             'logo'          => 'sometimes|string',
             'description'   => 'sometimes|string',
             'about'         => 'nullable|array',
@@ -81,7 +85,7 @@ class StoreController extends Controller
         if (isset($validated['isFeatured']))    $updateData['is_featured']    = $validated['isFeatured'];
         if (isset($validated['affiliateLink'])) $updateData['affiliate_link'] = $validated['affiliateLink'];
 
-        $fields = ['name', 'logo', 'description', 'about', 'rating', 'countries'];
+        $fields = ['name', 'slug', 'logo', 'description', 'about', 'rating', 'countries'];
         foreach ($fields as $f) {
             if (isset($validated[$f])) $updateData[$f] = $validated[$f];
         }

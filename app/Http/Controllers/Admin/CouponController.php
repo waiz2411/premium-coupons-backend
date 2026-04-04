@@ -41,38 +41,23 @@ class CouponController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'storeId'     => 'required|string',
-            'categoryId'  => 'required|string',
+            'store_id'    => 'required|string',
+            'category_id' => 'required|string',
             'title'       => 'required|string',
             'code'        => 'nullable|string',
-            'redirectUrl' => 'required|string',
-            'isDeal'      => 'required|boolean',
+            'redirect_url'=> 'required|string',
+            'is_deal'     => 'required|boolean',
             'discount'    => 'required|string',
             'description' => 'required|string',
-            'expiryDate'  => 'required|date',
-            'successRate' => 'required|integer',
-            'isVerified'  => 'required|boolean',
-            'isTrending'  => 'required|boolean',
-            'isNew'       => 'required|boolean',
+            'expiry_date' => 'required|date',
+            'success_rate'=> 'required|integer',
+            'is_verified' => 'required|boolean',
+            'is_trending' => 'required|boolean',
+            'is_new'      => 'required|boolean',
             'countries'   => 'required|array',
         ]);
 
-        $coupon = Coupon::create([
-            'store_id'    => $validated['storeId'],
-            'category_id' => $validated['categoryId'],
-            'title'       => $validated['title'],
-            'code'        => $validated['code'] ?? null,
-            'redirect_url'=> $validated['redirectUrl'],
-            'is_deal'     => $validated['isDeal'],
-            'discount'    => $validated['discount'],
-            'description' => $validated['description'],
-            'expiry_date' => $validated['expiryDate'],
-            'success_rate'=> $validated['successRate'],
-            'is_verified' => $validated['isVerified'],
-            'is_trending' => $validated['isTrending'],
-            'is_new'      => $validated['isNew'],
-            'countries'   => $validated['countries'],
-        ]);
+        $coupon = Coupon::create($validated);
 
         return response()->json($this->mapCoupon($coupon->fresh()), 201);
     }
@@ -81,41 +66,23 @@ class CouponController extends Controller
     {
         $coupon = Coupon::findOrFail($id);
         $validated = $request->validate([
-            'storeId'     => 'sometimes|string',
-            'categoryId'  => 'sometimes|string',
+            'store_id'    => 'sometimes|string',
+            'category_id' => 'sometimes|string',
             'title'       => 'sometimes|string',
             'code'        => 'nullable|string',
-            'redirectUrl' => 'sometimes|string',
-            'isDeal'      => 'sometimes|boolean',
+            'redirect_url'=> 'sometimes|string',
+            'is_deal'     => 'sometimes|boolean',
             'discount'    => 'sometimes|string',
             'description' => 'sometimes|string',
-            'expiryDate'  => 'sometimes|date',
-            'successRate' => 'sometimes|integer',
-            'isVerified'  => 'sometimes|boolean',
-            'isTrending'  => 'sometimes|boolean',
-            'isNew'       => 'sometimes|boolean',
+            'expiry_date' => 'sometimes|date',
+            'success_rate'=> 'sometimes|integer',
+            'is_verified' => 'sometimes|boolean',
+            'is_trending' => 'sometimes|boolean',
+            'is_new'      => 'sometimes|boolean',
             'countries'   => 'sometimes|array',
         ]);
 
-        $map = [
-            'storeId'     => 'store_id',
-            'categoryId'  => 'category_id',
-            'redirectUrl' => 'redirect_url',
-            'isDeal'      => 'is_deal',
-            'expiryDate'  => 'expiry_date',
-            'successRate' => 'success_rate',
-            'isVerified'  => 'is_verified',
-            'isTrending'  => 'is_trending',
-            'isNew'       => 'is_new',
-        ];
-
-        $updateData = [];
-        foreach ($validated as $key => $val) {
-            $dbKey = $map[$key] ?? $key;
-            $updateData[$dbKey] = $val;
-        }
-
-        $coupon->update($updateData);
+        $coupon->update($validated);
         return response()->json($this->mapCoupon($coupon->fresh()));
     }
 
@@ -129,12 +96,12 @@ class CouponController extends Controller
     public function bulkUpdateExpiry(Request $request)
     {
         $request->validate([
-            'couponIds'  => 'required|array',
-            'expiryDate' => 'required|date',
+            'coupon_ids'  => 'required|array',
+            'expiry_date' => 'required|date',
         ]);
 
-        $updatedCount = Coupon::whereIn('id', $request->couponIds)
-            ->update(['expiry_date' => $request->expiryDate]);
+        $updatedCount = Coupon::whereIn('id', $request->coupon_ids)
+            ->update(['expiry_date' => $request->expiry_date]);
 
         return response()->json(['updatedCount' => $updatedCount]);
     }

@@ -11,7 +11,7 @@ class Store extends Model
     use HasFactory, HasUuids;
 
     protected $fillable = [
-        'name', 'logo', 'description', 'about', 'category_id', 'rating', 'is_featured', 'affiliate_link', 'countries'
+        'name', 'slug', 'logo', 'description', 'about', 'category_id', 'rating', 'is_featured', 'affiliate_link', 'countries'
     ];
 
     protected $casts = [

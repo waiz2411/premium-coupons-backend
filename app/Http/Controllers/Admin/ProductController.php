@@ -76,6 +76,75 @@ class ProductController extends Controller
         return response()->json($this->mapProduct($product->fresh()));
     }
 
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimetypes:application/json,text/csv,text/plain'
+        ]);
+
+        $file = $request->file('file');
+        $extension = $file->getClientOriginalExtension();
+        $importedCount = 0;
+        $errors = [];
+        $data = [];
+
+        if ($extension === 'json') {
+            $parsed = json_decode(file_get_contents($file->path()), true);
+            if (!is_array($parsed)) {
+                return response()->json(['message' => 'Invalid JSON format'], 400);
+            }
+            $data = $parsed;
+        } elseif (in_array($extension, ['csv', 'txt'])) {
+            $handle = fopen($file->path(), "r");
+            // Remove BOM if present
+            $bom = fread($handle, 3);
+            if ($bom !== "\xEF\xBB\xBF") rewind($handle);
+            
+            $header = fgetcsv($handle, 10000, ",");
+            if ($header) {
+                while (($row = fgetcsv($handle, 10000, ",")) !== FALSE) {
+                    if (count($header) === count($row)) {
+                        $data[] = array_combine($header, $row);
+                    }
+                }
+            }
+            fclose($handle);
+        } else {
+            return response()->json(['message' => 'Unsupported file format, use JSON or CSV'], 400);
+        }
+
+        foreach ($data as $index => $row) {
+            try {
+                // Ensure required fields
+                if (empty($row['store_id']) || empty($row['category_id']) || empty($row['title']) || empty($row['description']) || empty($row['affiliate_url'])) {
+                    throw new \Exception("Missing required fields");
+                }
+
+                Product::create([
+                    'store_id' => $row['store_id'],
+                    'category_id' => $row['category_id'],
+                    'title' => $row['title'],
+                    'original_price' => $row['original_price'] ?? null,
+                    'discounted_price' => $row['discounted_price'] ?? null,
+                    'description' => $row['description'],
+                    'affiliate_url' => $row['affiliate_url'],
+                    'image_url' => $row['image_url'] ?? null,
+                    'is_trending' => filter_var($row['is_trending'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                    'countries' => isset($row['countries']) ? (is_array($row['countries']) ? $row['countries'] : array_map('trim', explode(',', $row['countries']))) : ['us']
+                ]);
+                $importedCount++;
+            } catch (\Exception $e) {
+                $errors[] = "Row " . ($index + 1) . ": " . $e->getMessage();
+            }
+        }
+
+        return response()->json([
+            'message' => "Successfully imported $importedCount products.",
+            'importedCount' => $importedCount,
+            'errors' => $errors
+        ]);
+    }
+
     public function destroy($id)
     {
         $product = Product::findOrFail($id);

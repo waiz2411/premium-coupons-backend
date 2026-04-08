@@ -73,9 +73,11 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::apiResource('stores', AdminStoreController::class);
 
     // IMPORTANT: bulk route must come BEFORE apiResource to avoid being captured as a coupon ID
+    Route::post('/coupons/import', [AdminCouponController::class, 'import']);
     Route::patch('/coupons/bulk-update-expiry', [AdminCouponController::class, 'bulkUpdateExpiry']);
     Route::apiResource('coupons', AdminCouponController::class);
 
+    Route::post('/products/import', [AdminProductController::class, 'import']);
     Route::apiResource('products', AdminProductController::class);
 
     Route::apiResource('blog', AdminBlogController::class);

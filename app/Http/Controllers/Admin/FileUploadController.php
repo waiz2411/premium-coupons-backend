@@ -17,9 +17,9 @@ class FileUploadController extends Controller
             $file = $request->file('file');
             $path = $file->store('uploads', 'public');
             // asset('storage/' . $path) generates the correct public URL after storage:link
-            $url = asset('storage/' . $path);
+            $url = asset('storage/app/public/' . $path);
             return response()->json([
-                'url'  => $url,
+                'url' => $url,
                 'path' => $path,
             ], 201);
         }

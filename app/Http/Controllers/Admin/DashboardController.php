@@ -41,16 +41,14 @@ class DashboardController extends Controller
         });
 
         return response()->json([
-            'stats' => [
-                'totalCoupons' => $totalCoupons,
-                'totalCouponsChange' => '+0%',
-                'activeStores' => $activeStores,
-                'activeStoresChange' => '+0%',
-                'totalClicks' => $totalClicks,
-                'totalClicksChange' => '+0%',
-                'pageViews' => $pageViews,
-                'pageViewsChange' => '+0%',
-            ],
+            'totalCoupons' => $totalCoupons,
+            'totalCouponsChange' => '+0%',
+            'activeStores' => $activeStores,
+            'activeStoresChange' => '+0%',
+            'totalClicks' => $totalClicks,
+            'totalClicksChange' => '+0%',
+            'pageViews' => $pageViews,
+            'pageViewsChange' => '+0%',
             'recentCoupons' => $recentCoupons,
             'topStores' => $topStores,
         ]);

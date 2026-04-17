@@ -12,6 +12,7 @@ class StoreController extends Controller
     {
         $data = is_array($store) ? $store : $store->toArray();
         $data['slug']          = $data['slug'] ?? null;
+        $data['customSlugs']   = $data['custom_slugs'] ?? (object)[];
         $data['categoryId']    = $data['category_id'];
         $data['isFeatured']    = (bool)$data['is_featured'];
         $data['affiliateLink'] = $data['affiliate_link'];
@@ -46,6 +47,7 @@ class StoreController extends Controller
             'isFeatured'    => 'required|boolean',
             'affiliateLink' => 'required|string',
             'countries'     => 'required|array',
+            'customSlugs'   => 'nullable|array',
         ]);
 
         $store = Store::create([
@@ -59,6 +61,7 @@ class StoreController extends Controller
             'is_featured'    => $validated['isFeatured'],
             'affiliate_link' => $validated['affiliateLink'],
             'countries'      => $validated['countries'],
+            'custom_slugs'   => $validated['customSlugs'] ?? null,
         ]);
 
         return response()->json($this->mapStore($store->fresh()), 201);
@@ -78,6 +81,7 @@ class StoreController extends Controller
             'isFeatured'    => 'sometimes|boolean',
             'affiliateLink' => 'sometimes|string',
             'countries'     => 'sometimes|array',
+            'customSlugs'   => 'nullable|array',
         ]);
 
         $updateData = [];
@@ -88,6 +92,9 @@ class StoreController extends Controller
         $fields = ['name', 'slug', 'logo', 'description', 'about', 'rating', 'countries'];
         foreach ($fields as $f) {
             if (isset($validated[$f])) $updateData[$f] = $validated[$f];
+        }
+        if (array_key_exists('customSlugs', $validated)) {
+            $updateData['custom_slugs'] = $validated['customSlugs'];
         }
 
         $store->update($updateData);

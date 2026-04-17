@@ -54,9 +54,10 @@ class StoreController extends Controller
 
         $paginator = $query->paginate($limit, ['*'], 'page', $page);
 
-        $items = $paginator->getCollection()->map(function ($store) {
+        $items = $paginator->getCollection()->map(function ($store) use ($country) {
             $data = $store->toArray();
-            $data['slug']         = $store->slug ?? null;
+            $customSlug = $store->custom_slugs[$country] ?? null;
+            $data['slug']         = $customSlug ?: ($store->slug ?? null);
             $data['couponCount']  = $store->coupons_count ?? 0;
             $data['categoryId']   = $data['category_id'];
             $data['isFeatured']   = (bool)$data['is_featured'];
@@ -79,8 +80,10 @@ class StoreController extends Controller
         $country = strtolower($request->query('country'));
 
         $store = Store::whereJsonContains('countries', $country)
-            ->where(function($q) use ($id) {
-                $q->where('id', $id)->orWhere('slug', $id);
+            ->where(function($q) use ($id, $country) {
+                $q->where('id', $id)
+                  ->orWhere('slug', $id)
+                  ->orWhere('custom_slugs->' . $country, $id);
             })
             ->firstOrFail();
 
@@ -119,9 +122,10 @@ class StoreController extends Controller
             ->where('id', '!=', $store->id)
             ->take(4)
             ->get()
-            ->map(function ($s) {
+            ->map(function ($s) use ($country) {
                 $item = $s->toArray();
-                $item['slug']         = $s->slug ?? null;
+                $customSlug = $s->custom_slugs[$country] ?? null;
+                $item['slug']         = $customSlug ?: ($s->slug ?? null);
                 $item['categoryId']   = $item['category_id'];
                 $item['isFeatured']   = (bool)$item['is_featured'];
                 $item['affiliateLink'] = $item['affiliate_link'];
@@ -129,7 +133,8 @@ class StoreController extends Controller
             });
 
         $data = $store->toArray();
-        $data['slug']          = $store->slug ?? null;
+        $customSlug = $store->custom_slugs[$country] ?? null;
+        $data['slug']          = $customSlug ?: ($store->slug ?? null);
         $data['categoryId']    = $data['category_id'];
         $data['isFeatured']    = (bool)$data['is_featured'];
         $data['affiliateLink'] = $data['affiliate_link'];
